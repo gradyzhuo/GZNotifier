@@ -66,8 +66,8 @@ class GZNotifier:NSObject{
     var notificationOffset = CGPoint(x: 0, y: 20)
     var notificationSize:CGSize = CGSize(width: UIScreen.mainScreen().bounds.width, height: 60)
     
+
     var baseView:UIView!{
-        
         set{
             self.privateCache.shownInView = newValue
         }
@@ -92,7 +92,6 @@ class GZNotifier:NSObject{
             
             return shownInView
         }
-        
         
     
     }
@@ -247,7 +246,6 @@ class GZNotifier:NSObject{
             runwayView.frame = CGRect(origin: notificationView.appearByOffset, size: notificationView.appearInSize)
             
             inView.addSubview(runwayView)
-            
             
             runwayView.addSubview(notificationView)
             
