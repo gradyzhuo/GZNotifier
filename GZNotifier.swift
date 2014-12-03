@@ -922,10 +922,10 @@ extension GZNotifier.TemplateView.__DefaultTemplateView {
 
     
     private struct Cache {
-        static var stokeColor: UIColor = UIColor(red: 0.918, green: 0.956, blue: 0.970, alpha: 1.0)
+        static var stokeColor: UIColor = UIColor(red: 0.933, green: 0.965, blue: 0.976, alpha: 1.000)
         static var failedColor: UIColor = UIColor(red: 0.839, green: 0.557, blue: 0.557, alpha: 1.000)
         static var successColor: UIColor = UIColor(red: 0.275, green: 0.690, blue: 0.729, alpha: 1.000)
-        static var warningColor: UIColor = UIColor(red: 0.945, green: 0.875, blue: 0.427, alpha: 1.000)
+        static var warningColor: UIColor = UIColor(red: 0.937, green: 0.780, blue: 0.106, alpha: 1.000)
     }
     
 }
