@@ -20,6 +20,8 @@ let GZNotifierShowFailedNotificationName = "GZNotifierShowFailedNotificationName
 
 let kGZNotifierShowNotificationMessage = "kGZNotifierShowNotificationMessageKey"
 let kGZNotifierShowNotificationTitle = "kGZNotifierShowNotificationTitleKey"
+let kGZNotifierShowNotificationAPSUserInfo = "kGZNotifierShowNotificationAPSUserInfo"
+
 
 @objc protocol GZNotification:NSObjectProtocol {
     
@@ -314,12 +316,31 @@ extension GZNotifier{
 extension GZNotifier {
     
     enum NotificationType:String{
-        case Undefined = "Undefined"
-        case Normal = "Normal"
-        case Success = "Success"
-        case Alert = "Alert"
-        case Failed = "Failed"
-        case Warning = "Warning"
+        case Undefined = "UNDEFINED"
+        
+        case Normal = "NORMAL"
+        case Success = "SUCCESS"
+        case Alert = "ALERT"
+        case Failed = "FAILED"
+        case Warning = "WARNING"
+        
+        
+        func getNotificationName()->String{
+            
+            switch self{
+                
+            case .Warning:
+                return GZNotifierShowWarningNotificationName
+            case .Failed:
+                return GZNotifierShowFailedNotificationName
+            default:
+                return GZNotifierShowSuccessNotificationName
+                
+            }
+            
+            
+        }
+        
         
     }
     
