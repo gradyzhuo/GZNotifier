@@ -22,6 +22,7 @@ let kGZNotifierShowNotificationMessage = "kGZNotifierShowNotificationMessageKey"
 let kGZNotifierShowNotificationTitle = "kGZNotifierShowNotificationTitleKey"
 let kGZNotifierShowNotificationAPSUserInfo = "kGZNotifierShowNotificationAPSUserInfo"
 
+let kGZNotifierDefaultShowAnimationDuration = 1.0
 
 @objc protocol GZNotification:NSObjectProtocol {
     
@@ -245,17 +246,33 @@ class GZNotifier:NSObject{
             
             
             var runwayView = GZNotifier.RunWayView()
-            runwayView.frame = CGRect(origin: notificationView.appearByOffset, size: notificationView.appearInSize)
+            
+            var runwayFrame = CGRect(origin: notificationView.appearByOffset, size: notificationView.appearInSize)
+            var notificationFrame = CGRect(origin: CGPoint(x: 0, y: 0), size: notificationView.appearInSize)
+            
+            //如果y設為 0，為避開status bar 的處理
+            if notificationView.appearByOffset.y == 0 {
+                
+                var statusFrame = UIApplication.sharedApplication().statusBarFrame
+                
+                runwayFrame.size.height += statusFrame.height
+                
+                //notification的高度不變，但y向下移到status之下
+                notificationFrame.origin.y = 0//statusFrame.maxY
+                notificationFrame.size.height = runwayFrame.size.height
+            }
+            
+            //run way view 增加 status 的 height
+            runwayView.frame = runwayFrame
             
             inView.addSubview(runwayView)
+
+            notificationView.frame = notificationFrame
+//            notificationView.frame.offset(dx: notificationView.appearByOffset.x, dy: notificationView.appearByOffset.y)
             
             runwayView.addSubview(notificationView)
             
-            notificationView.frame = CGRect(origin: CGPoint(x: 0, y: 0), size: notificationView.appearInSize)
-//            notificationView.frame.offset(dx: notificationView.appearByOffset.x, dy: notificationView.appearByOffset.y)
-            
-            
-            var autoHiddenSetting = self.delegate?.notifierShouldAutoHiddenBySetting(self, type: type, notification: notification) ?? AutoHiddenSetting.Manual
+            var autoHiddenSetting = self.delegate?.notifierShouldAutoHiddenBySetting(self, type: type, notification: notification) ?? AutoHiddenSetting.AutoHiddenAfter(kGZNotifierDefaultShowAnimationDuration)
             
             if let delegate = self.delegate {
                 delegate.notifierWillAppear(self, notificationView: notificationView)
@@ -439,9 +456,9 @@ extension GZNotifier {
             }
         }
         
-        private var shouldTranslator:CGPoint{
-            return CGPoint(x: 0, y: -self.appearInSize.height)
-        }
+//        private var shouldTranslator:CGPoint{
+//            return CGPoint(x: 0, y: -self.frame.maxY)
+//        }
         
         var notification:protocol<GZNotification>?
         
@@ -565,8 +582,12 @@ extension GZNotifier.TemplateView{
             self.messageLabel.numberOfLines = 0
             self.messageLabel.textColor = GZNotificationDefaultTemplateView.stokeColor
             
+            
+            
             self.addSubview(self.messageLabel)
             self.addSubview(self.iconImageView)
+            
+            
             
             
         }
@@ -574,18 +595,32 @@ extension GZNotifier.TemplateView{
         override func layoutSubviews() {
             super.layoutSubviews()
             
-            var imageSize = self.bounds.height * (44.0/60.0)
+            var vaildBounds = self.bounds
+            
+            if self.appearByOffset.y == 0{
+                
+                vaildBounds.origin.y += UIApplication.sharedApplication().statusBarFrame.maxY
+                vaildBounds.size.height -= UIApplication.sharedApplication().statusBarFrame.maxY
+                
+            }
+            
+            
+            var imageSize:CGFloat = vaildBounds.height * (44.0/60.0)
             var iconImageSize = CGSize(width: imageSize, height: imageSize)
             
             self.iconImageView.frame.size = iconImageSize
-            self.iconImageView.center = CGPoint(x: iconImageSize.width/2.0, y: self.bounds.midY)
+            self.iconImageView.contentMode = UIViewContentMode.ScaleAspectFill
+            
+            
+            self.iconImageView.center = CGPoint(x: iconImageSize.width/2.0, y: vaildBounds.midY)
             self.iconImageView.frame.offset(dx: 6, dy: 0)
             
             
-            self.messageLabel.frame.size = CGSize(width: self.bounds.width - imageSize - 10, height: self.bounds.height)
-            self.messageLabel.frame.origin = CGPoint(x: self.iconImageView.frame.maxX + 5, y: 0)
+            self.messageLabel.frame.size = CGSize(width: vaildBounds.width - imageSize - 10, height: vaildBounds.height)
+            self.messageLabel.frame.origin = CGPoint(x: self.iconImageView.frame.maxX + 5, y: vaildBounds.minY)
             
-            
+            self.messageLabel.autoresizingMask = UIViewAutoresizing.FlexibleTopMargin | UIViewAutoresizing.FlexibleLeftMargin
+            self.iconImageView.autoresizingMask = UIViewAutoresizing.FlexibleTopMargin | UIViewAutoresizing.FlexibleRightMargin
             
         }
         
@@ -644,6 +679,7 @@ extension GZNotifier.TemplateView.__DefaultTemplateView {
     
 }
 
+//MARK: - GZNotificationAnimation
 
 class GZNotificationAnimation{
     
@@ -682,8 +718,8 @@ class GZNotificationAnimation{
     
     func show(notificationView:GZNotifier.TemplateView, delay:NSTimeInterval, completionHandler:(finished:Bool)->Void){
 
-        
-        var startTranslation = CGAffineTransformMakeTranslation(notificationView.shouldTranslator.x, notificationView.shouldTranslator.y)
+        var shouldTranslator = CGPoint(x: 0, y: -notificationView.frame.maxY)
+        var startTranslation = CGAffineTransformMakeTranslation(shouldTranslator.x, shouldTranslator.y)
         
         notificationView.transform = startTranslation
         
@@ -700,7 +736,9 @@ class GZNotificationAnimation{
     
     func hide(notificationView:GZNotifier.TemplateView, delay:NSTimeInterval,completionHandler:(finished:Bool)->Void){
         
-        var startTranslation = CGAffineTransformMakeTranslation(notificationView.shouldTranslator.x, notificationView.shouldTranslator.y)
+        
+        var shouldTranslator = CGPoint(x: 0, y: -notificationView.frame.maxY)
+        var startTranslation = CGAffineTransformMakeTranslation(shouldTranslator.x, shouldTranslator.y)
         
         UIView.animateWithDuration(0.6, delay: delay, options: UIViewAnimationOptions.CurveEaseInOut, animations: { () -> Void in
             notificationView.transform = startTranslation
