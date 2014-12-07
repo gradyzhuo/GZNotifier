@@ -560,6 +560,9 @@ extension GZNotifier.TemplateView{
         
         override func __initialize() {
             
+            super.__initialize()
+
+            self.messageLabel.numberOfLines = 0
             self.messageLabel.textColor = GZNotificationDefaultTemplateView.stokeColor
             
             self.addSubview(self.messageLabel)
@@ -571,15 +574,15 @@ extension GZNotifier.TemplateView{
         override func layoutSubviews() {
             super.layoutSubviews()
             
-            var side = self.bounds.height * (44.0/60.0)
-            var iconImageSize = CGSize(width: side, height: side)
+            var imageSize = self.bounds.height * (44.0/60.0)
+            var iconImageSize = CGSize(width: imageSize, height: imageSize)
             
             self.iconImageView.frame.size = iconImageSize
             self.iconImageView.center = CGPoint(x: iconImageSize.width/2.0, y: self.bounds.midY)
             self.iconImageView.frame.offset(dx: 6, dy: 0)
             
             
-            self.messageLabel.frame.size = CGSize(width: self.bounds.width - side - 5, height: self.bounds.height)
+            self.messageLabel.frame.size = CGSize(width: self.bounds.width - imageSize - 10, height: self.bounds.height)
             self.messageLabel.frame.origin = CGPoint(x: self.iconImageView.frame.maxX + 5, y: 0)
             
             
@@ -681,8 +684,6 @@ class GZNotificationAnimation{
 
         
         var startTranslation = CGAffineTransformMakeTranslation(notificationView.shouldTranslator.x, notificationView.shouldTranslator.y)
-        
-        var keyframeAnimation = CAKeyframeAnimation()
         
         notificationView.transform = startTranslation
         
