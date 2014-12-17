@@ -799,7 +799,7 @@ class GZSuccessNotification:GZSimpleNotification{
     
         var iconSize = CGSize(width: 44, height: 44)
         
-        UIGraphicsBeginImageContextWithOptions(iconSize, false, 3.0)
+        UIGraphicsBeginImageContextWithOptions(iconSize, false, UIScreen.mainScreen().scale)
         GZNotificationDefaultTemplateView.drawNekerSuccessIconImage(CGRect(origin: CGPointZero, size: iconSize), strokeColor: GZNotificationDefaultTemplateView.stokeColor)
         var image = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
@@ -822,7 +822,7 @@ class GZWarningNotification:GZSimpleNotification{
         
         var iconSize = CGSize(width: 44, height: 44)
         
-        UIGraphicsBeginImageContextWithOptions(iconSize, false, 3.0)
+        UIGraphicsBeginImageContextWithOptions(iconSize, false, UIScreen.mainScreen().scale)
         
         GZNotificationDefaultTemplateView.drawNekerWarningIconImage(CGRect(origin: CGPointZero, size: iconSize), strokeColor: GZNotificationDefaultTemplateView.stokeColor)
         
@@ -846,7 +846,7 @@ class GZFailNotification:GZSimpleNotification{
         
         var iconSize = CGSize(width: 44, height: 44)
         
-        UIGraphicsBeginImageContextWithOptions(iconSize, false, 3.0)
+        UIGraphicsBeginImageContextWithOptions(iconSize, false, UIScreen.mainScreen().scale)
         
         GZNotificationDefaultTemplateView.drawNekerFailedIcon(CGRect(origin: CGPointZero, size: iconSize), strokeColor: GZNotificationDefaultTemplateView.stokeColor)
         
