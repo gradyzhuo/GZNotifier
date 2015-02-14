@@ -42,20 +42,19 @@ protocol GZNotifierDelegate {
     func notifierPrepareNotificationView(notifier:GZNotifier, type:GZNotifierType, notification:GZNotification, notificationView:GZNotifierTemplateView)
 }
 
-class GZNotifier:NSObject{
-    
+let GZNotifierDefaultContentOffset = CGPoint(x: 0, y: UIApplication.sharedApplication().statusBarFrame.height)
+let GZNotifierDefaultContentSize = CGSize(width: UIScreen.mainScreen().bounds.width, height: 60)
+
+class GZNotifier{
     
     class var defaultNotifier:GZNotifier {
         
         dispatch_once(&Cache.singletonOncePtr, { () -> Void in
             Cache.singleton = GZNotifier()
+            
+            
+            
         })
-        
-        
-        NSNotificationCenter.defaultCenter().addObserver(Cache.singleton!, selector: "showByNote:", name: GZNotifierShowSuccessNotificationName, object: nil)
-        NSNotificationCenter.defaultCenter().addObserver(Cache.singleton!, selector: "showByNote:", name: GZNotifierShowWarningNotificationName, object: nil)
-        NSNotificationCenter.defaultCenter().addObserver(Cache.singleton!, selector: "showByNote:", name: GZNotifierShowFailedNotificationName, object: nil)
-        
         
         return Cache.singleton!
     }
@@ -66,8 +65,8 @@ class GZNotifier:NSObject{
     var delegate:GZNotifierDelegate?
     var animation:GZNotificationAnimation = GZNotificationAnimation()
     
-    var notificationOffset = CGPoint(x: 0, y: 20)
-    var notificationSize:CGSize = CGSize(width: UIScreen.mainScreen().bounds.width, height: 60)
+    var contentOffset = GZNotifierDefaultContentOffset
+    var contentSize:CGSize = GZNotifierDefaultContentSize
     
 
     var baseView:UIView!{
@@ -101,14 +100,20 @@ class GZNotifier:NSObject{
     
     
     // MARK: - Initializer
-    override init(){
-        super.init()
+    init(){
         
-        self.initialize()
-        
+        self.initialize(contentSize: GZNotifierDefaultContentSize, contentOffset: GZNotifierDefaultContentOffset)
     }
     
-    func initialize(){
+    init(contentSize:CGSize, contentOffset:CGPoint){
+        self.initialize(contentSize: contentSize, contentOffset: contentOffset)
+    }
+    
+    private func initialize(#contentSize:CGSize, contentOffset:CGPoint){
+        
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: "showByNote:", name: GZNotifierShowSuccessNotificationName, object: nil)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: "showByNote:", name: GZNotifierShowWarningNotificationName, object: nil)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: "showByNote:", name: GZNotifierShowFailedNotificationName, object: nil)
         
         self.register(template: GZNotificationDefaultNormalTemplateView.self, forType: .Normal)
         self.register(template: GZNotificationDefaultSuccessTemplateView.self, forType: .Success)
@@ -200,9 +205,9 @@ class GZNotifier:NSObject{
 
     }
     
-    func show(#inView:UIView?, type:NotificationType, sampleMessage message:String, animated:Bool){
+    func show(#inView:UIView, type:NotificationType, sampleMessage message:String, animated:Bool){
         
-        self.show(inView: inView ?? self.baseView , type: type, sampleMessage: message, sampleTitle: "", animated: animated)
+        self.show(inView: inView , type: type, sampleMessage: message, sampleTitle: "", animated: animated)
         
     }
     
@@ -213,14 +218,14 @@ class GZNotifier:NSObject{
     }
     
     
-    func show(#inView:UIView?, type:NotificationType, sampleMessage message:String, sampleTitle title:String, animated:Bool){
+    func show(#inView:UIView, type:NotificationType, sampleMessage message:String, sampleTitle title:String, animated:Bool){
         
         var notification = type.simpleNotification()
         
         notification.title = title
         notification.message = message
         
-        self.show(inView: inView ?? self.baseView , type: type, notification: notification, animated: animated)
+        self.show(inView: inView , type: type, notification: notification, animated: animated)
         
     }
     
@@ -298,8 +303,23 @@ class GZNotifier:NSObject{
         }
     }
     
+    //MARK: - show in view controller
     
-
+    func show(inViewController viewController:UIViewController, type:NotificationType, sampleMessage message:String, animated:Bool){
+        
+        self.contentOffset.y = viewController.topLayoutGuide.length
+        self.show(inView: viewController.view , type: type, sampleMessage: message, sampleTitle: "", animated: animated)
+        self.contentOffset = GZNotifierDefaultContentOffset
+    }
+    
+    func show(inViewController viewController:UIViewController, type:NotificationType, sampleMessage message:String, sampleTitle title:String, animated:Bool){
+        
+        self.contentOffset.y = viewController.topLayoutGuide.length
+        self.show(inView: viewController.view , type: type, sampleMessage: message, sampleTitle: title, animated: animated)
+        self.contentOffset = GZNotifierDefaultContentOffset
+        
+    }
+    
 }
 
 
@@ -496,10 +516,10 @@ extension GZNotifier {
             get{
                 
                 if self.privateCache.appearInSize == nil {
-                    self.privateCache.appearInSize = self.notifier.notificationSize
+                    self.privateCache.appearInSize = self.notifier.contentSize
                 }
                 
-                return self.privateCache.appearInSize ?? self.notifier.notificationSize
+                return self.privateCache.appearInSize ?? self.notifier.contentSize
                 
             }
             
@@ -513,9 +533,9 @@ extension GZNotifier {
             
             get{
                 if self.privateCache.appearByOffset == nil {
-                    self.privateCache.appearByOffset = self.notifier.notificationOffset
+                    self.privateCache.appearByOffset = self.notifier.contentOffset
                 }
-                return self.privateCache.appearByOffset ?? self.notifier.notificationOffset
+                return self.privateCache.appearByOffset ?? self.notifier.contentOffset
             }
         }
         
