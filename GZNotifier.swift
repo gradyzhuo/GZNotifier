@@ -36,7 +36,7 @@ let kGZNotifierDefaultShowAnimationDuration = 1.0
 
 protocol GZNotifierDelegate {
     
-    func notifierShouldAutoHiddenBySetting(notifier:GZNotifier, type:GZNotifierType, notification:GZNotification) -> GZNotifierAutoHiddenSetting
+//    func notifierShouldAutoHiddenBySetting(notifier:GZNotifier, type:GZNotifierType, notification:GZNotification) -> GZNotifierAutoHiddenSetting
     
     func notifierWillAppear(notifier:GZNotifier, notificationView:GZNotifier.TemplateView)
     func notifierPrepareNotificationView(notifier:GZNotifier, type:GZNotifierType, notification:GZNotification, notificationView:GZNotifierTemplateView)
@@ -45,37 +45,42 @@ protocol GZNotifierDelegate {
 let GZNotifierDefaultContentOffset = CGPoint(x: 0, y: UIApplication.sharedApplication().statusBarFrame.height)
 let GZNotifierDefaultContentSize = CGSize(width: UIScreen.mainScreen().bounds.width, height: 60)
 
+
+struct GZNotifierContentAppearSetting{
+    var appearInSize:CGSize
+    var appearByOffset:CGPoint
+    var autoHiddenSetting:GZNotifierAutoHiddenSetting
+}
+
 class GZNotifier{
     
     class var defaultNotifier:GZNotifier {
         
-        dispatch_once(&Cache.singletonOncePtr, { () -> Void in
-            Cache.singleton = GZNotifier()
-            
-            
-            
+        dispatch_once(&ObjectInfo.singletonOncePtr, { () -> Void in
+            ObjectInfo.singleton = GZNotifier()
         })
         
-        return Cache.singleton!
+        return ObjectInfo.singleton!
     }
     
     private var templateViewsDict:[NotificationType:Template] = [:]
-    private var privateCache = Cache()
+    private var privateObjectInfo = ObjectInfo()
     
     var delegate:GZNotifierDelegate?
     var animation:GZNotificationAnimation = GZNotificationAnimation()
     
-    var contentOffset = GZNotifierDefaultContentOffset
-    var contentSize:CGSize = GZNotifierDefaultContentSize
+//    var contentOffset:CGPoint
+//    var contentSize:CGSize
     
-
+    var contentAppearSetting:GZNotifierContentAppearSetting
+    
     var baseView:UIView!{
         set{
-            self.privateCache.shownInView = newValue
+            self.privateObjectInfo.shownInView = newValue
         }
         
         get{
-            var shownInView:UIView! = self.privateCache.shownInView
+            var shownInView:UIView! = self.privateObjectInfo.shownInView
             
             if nil == shownInView{
                 if let window = UIApplication.sharedApplication().keyWindow {
@@ -102,14 +107,21 @@ class GZNotifier{
     // MARK: - Initializer
     init(){
         
-        self.initialize(contentSize: GZNotifierDefaultContentSize, contentOffset: GZNotifierDefaultContentOffset)
+        self.contentAppearSetting = GZNotifierContentAppearSetting(appearInSize: GZNotifierDefaultContentSize, appearByOffset: GZNotifierDefaultContentOffset, autoHiddenSetting: GZNotifierAutoHiddenSetting.AutoHiddenAfter(kGZNotifierDefaultShowAnimationDuration))
+        
+        self.initialize()
+        
+        
     }
     
-    init(contentSize:CGSize, contentOffset:CGPoint){
-        self.initialize(contentSize: contentSize, contentOffset: contentOffset)
+    init(contentSize:CGSize, contentOffset:CGPoint, autoHiddenSetting:GZNotifierAutoHiddenSetting){
+        
+        self.contentAppearSetting = GZNotifierContentAppearSetting(appearInSize: contentSize, appearByOffset: contentOffset, autoHiddenSetting: autoHiddenSetting)
+        
+        self.initialize()
     }
     
-    private func initialize(#contentSize:CGSize, contentOffset:CGPoint){
+    private func initialize(){
         
         NSNotificationCenter.defaultCenter().addObserver(self, selector: "showByNote:", name: GZNotifierShowSuccessNotificationName, object: nil)
         NSNotificationCenter.defaultCenter().addObserver(self, selector: "showByNote:", name: GZNotifierShowWarningNotificationName, object: nil)
@@ -120,6 +132,8 @@ class GZNotifier{
         self.register(template: GZNotificationDefaultAlertTemplateView.self, forType: .Alert)
         self.register(template: GZNotificationDefaultFailedTemplateView.self, forType: .Failed)
         self.register(template: GZNotificationDefaultWarningTemplateView.self, forType: .Warning)
+        
+        
         
     }
     
@@ -235,20 +249,26 @@ class GZNotifier{
         
     }
     
+    
     func show(#inView:UIView, type:NotificationType, notification:GZNotification, animated:Bool){
+        self.show(inView: inView, type: type, notification: notification, appearSetting: nil, animated: animated)
+    }
+    
+    
+    func show(#inView:UIView, type:NotificationType, notification:GZNotification, appearSetting:GZNotifierContentAppearSetting?, animated:Bool){
         
         self.animation.notifier = self
         
         if let template = self.templateViewsDict[type]{
             
-            var notificationView = template.notificationView
+            var notificationView = template.createNotificationView()
             notificationView.notification = notification
             notificationView.notifier = self
             
-            if let delegate = self.delegate  {
-                delegate.notifierPrepareNotificationView(self, type: type, notification: notification, notificationView: notificationView)
-            }
+            notificationView.privateObjectInfo.appearInSize = appearSetting?.appearInSize
+            notificationView.privateObjectInfo.appearByOffset = appearSetting?.appearByOffset
             
+            self.delegate?.notifierPrepareNotificationView(self, type: type, notification: notification, notificationView: notificationView)
             
             var runwayView = GZNotifier.RunWayView()
             
@@ -277,7 +297,7 @@ class GZNotifier{
             
             runwayView.addSubview(notificationView)
             
-            var autoHiddenSetting = self.delegate?.notifierShouldAutoHiddenBySetting(self, type: type, notification: notification) ?? AutoHiddenSetting.AutoHiddenAfter(kGZNotifierDefaultShowAnimationDuration)
+            var autoHiddenSetting = appearSetting?.autoHiddenSetting ?? self.contentAppearSetting.autoHiddenSetting
             
             if let delegate = self.delegate {
                 delegate.notifierWillAppear(self, notificationView: notificationView)
@@ -307,16 +327,18 @@ class GZNotifier{
     
     func show(inViewController viewController:UIViewController, type:NotificationType, sampleMessage message:String, animated:Bool){
         
-        self.contentOffset.y = viewController.topLayoutGuide.length
+        var currentAppearSetting = self.contentAppearSetting
+        self.contentAppearSetting.appearByOffset.y = viewController.topLayoutGuide.length
         self.show(inView: viewController.view , type: type, sampleMessage: message, sampleTitle: "", animated: animated)
-        self.contentOffset = GZNotifierDefaultContentOffset
+        self.contentAppearSetting = currentAppearSetting
     }
     
     func show(inViewController viewController:UIViewController, type:NotificationType, sampleMessage message:String, sampleTitle title:String, animated:Bool){
         
-        self.contentOffset.y = viewController.topLayoutGuide.length
+        var currentAppearSetting = self.contentAppearSetting
+        self.contentAppearSetting.appearByOffset.y = viewController.topLayoutGuide.length
         self.show(inView: viewController.view , type: type, sampleMessage: message, sampleTitle: title, animated: animated)
-        self.contentOffset = GZNotifierDefaultContentOffset
+        self.contentAppearSetting = currentAppearSetting
         
     }
     
@@ -326,7 +348,7 @@ class GZNotifier{
 // MARK: - Notifier's private data cache
 extension GZNotifier {
     
-    private struct Cache{
+    private struct ObjectInfo{
         var shownInView:UIView? = nil
         static var singleton:GZNotifier? = nil
         static var singletonOncePtr:dispatch_once_t = 0
@@ -436,9 +458,7 @@ extension GZNotifier.Template : Printable
         
     }
     
-    
-    
-    var notificationView:GZNotifier.TemplateView {
+    func createNotificationView()->GZNotifier.TemplateView{
         
         switch self {
             
@@ -453,8 +473,9 @@ extension GZNotifier.Template : Printable
             
             return notificationView
         }
-        
+
     }
+
 }
 
 
@@ -465,14 +486,14 @@ extension GZNotifier {
     class TemplateView:UIView {
         
         private var fromNib:Bool = false
-        private var privateCache = __Cache()
+        private var privateObjectInfo = __Cache()
         private var notifier:GZNotifier{
             set{
-                self.privateCache.notifier = newValue
+                self.privateObjectInfo.notifier = newValue
             }
             
             get{
-                return self.privateCache.notifier ?? GZNotifier.defaultNotifier
+                return self.privateObjectInfo.notifier ?? GZNotifier.defaultNotifier
             }
         }
         
@@ -483,7 +504,7 @@ extension GZNotifier {
         var notification:protocol<GZNotification>?
         
         var type:NotificationType{
-            return privateCache.type
+            return privateObjectInfo.type
         }
         
         required override init() {
@@ -507,35 +528,28 @@ extension GZNotifier {
             
         }
         
-        var appearInSize:CGSize {
+        var appearInSize:CGSize{
             
-            set{
-                self.privateCache.appearInSize = newValue
-            }
-            
+//            set{
+//                self.privateObjectInfo.appearInSize = newValue
+//            }
+//            
             get{
                 
-                if self.privateCache.appearInSize == nil {
-                    self.privateCache.appearInSize = self.notifier.contentSize
-                }
-                
-                return self.privateCache.appearInSize ?? self.notifier.contentSize
+                return self.privateObjectInfo.appearInSize ?? self.notifier.contentAppearSetting.appearInSize
                 
             }
             
             
         }
         
-        var appearByOffset:CGPoint {
-            set{
-                self.privateCache.appearByOffset = newValue
-            }
+        var appearByOffset:CGPoint{
+//            set{
+//                self.privateObjectInfo.appearByOffset = newValue
+//            }
             
             get{
-                if self.privateCache.appearByOffset == nil {
-                    self.privateCache.appearByOffset = self.notifier.contentOffset
-                }
-                return self.privateCache.appearByOffset ?? self.notifier.contentOffset
+                return self.privateObjectInfo.appearByOffset ?? self.notifier.contentAppearSetting.appearByOffset
             }
         }
         
@@ -703,15 +717,15 @@ extension GZNotifier.TemplateView.__DefaultTemplateView {
 
 class GZNotificationAnimation{
     
-    private var privateCache:Cache = Cache()
+    private var privateObjectInfo:ObjectInfo = ObjectInfo()
     
     private var notifier:GZNotifier{
         set{
-            self.privateCache.notifier = newValue
+            self.privateObjectInfo.notifier = newValue
         }
         
         get{
-            return self.privateCache.notifier ?? GZNotifier.defaultNotifier
+            return self.privateObjectInfo.notifier ?? GZNotifier.defaultNotifier
         }
     }
     
@@ -767,7 +781,7 @@ class GZNotificationAnimation{
         })
     }
     
-    private struct Cache {
+    private struct ObjectInfo {
         var notifier:GZNotifier? = nil
     }
     
@@ -888,19 +902,19 @@ class GZFailNotification:GZSimpleNotification{
 extension GZNotifier.TemplateView.__DefaultTemplateView {
     
     class var stokeColor:UIColor{
-        return Cache.stokeColor
+        return ObjectInfo.stokeColor
     }
     
     class var successColor:UIColor{
-        return Cache.successColor
+        return ObjectInfo.successColor
     }
     
     class var failedColor:UIColor{
-        return Cache.failedColor
+        return ObjectInfo.failedColor
     }
     
     class var warningColor:UIColor{
-        return Cache.warningColor
+        return ObjectInfo.warningColor
     }
     
     private class func drawNekerFailedIcon(frame: CGRect, strokeColor: UIColor) {
@@ -1001,7 +1015,7 @@ extension GZNotifier.TemplateView.__DefaultTemplateView {
     }
 
     
-    private struct Cache {
+    private struct ObjectInfo {
         static var stokeColor: UIColor = UIColor(red: 0.933, green: 0.965, blue: 0.976, alpha: 1.000)
         static var failedColor: UIColor = UIColor(red: 0.839, green: 0.557, blue: 0.557, alpha: 1.000)
         static var successColor: UIColor = UIColor(red: 0.275, green: 0.690, blue: 0.729, alpha: 1.000)
