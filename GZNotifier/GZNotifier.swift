@@ -191,11 +191,11 @@ class GZNotifier{
         if let userInfo = note.userInfo {
             
             if let messageObject: AnyObject = userInfo[kGZNotifierShowNotificationMessage] {
-                message = messageObject as String
+                message = messageObject as! String
             }
             
             if let titleObject:AnyObject = userInfo[kGZNotifierShowNotificationTitle] {
-                title = titleObject as String
+                title = titleObject as! String
             }
             
             
@@ -469,7 +469,7 @@ extension GZNotifier.Template : Printable
         case let .FromNib(Nib, ViewIndex):
             var instantsInXib = Nib.instantiateWithOwner(nil, options: nil)
             
-            var notificationView = instantsInXib[ViewIndex] as GZNotifier.TemplateView
+            var notificationView = instantsInXib[ViewIndex] as! GZNotifier.TemplateView
             
             return notificationView
         }
@@ -507,11 +507,10 @@ extension GZNotifier {
             return privateObjectInfo.type
         }
         
-        required override init() {
-            super.init()
+        required init() {
+            super.init(frame : CGRect.zeroRect)
             
             self.__initialize()
-            
         }
         
         override init(frame: CGRect) {
