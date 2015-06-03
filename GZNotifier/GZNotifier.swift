@@ -374,7 +374,7 @@ extension GZNotifier{
 
 extension GZNotifier {
     
-    public enum NotificationType:String{
+    internal enum NotificationType:String{
         case Undefined = "UNDEFINED"
         
         case Normal = "NORMAL"
