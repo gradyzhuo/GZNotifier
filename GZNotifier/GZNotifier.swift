@@ -87,8 +87,8 @@ class GZNotifier{
                     shownInView = window
                 }else{
                     
-                    println("Can't find Key window")
-                    var customWindow = UIWindow(frame: UIScreen.mainScreen().bounds)
+                    print("Can't find Key window")
+                    let customWindow = UIWindow(frame: UIScreen.mainScreen().bounds)
                     customWindow.makeKeyAndVisible()
                     customWindow.windowLevel = UIWindowLevelNormal
                     
@@ -146,25 +146,25 @@ class GZNotifier{
     }
     
     /** Default - Use first-view in instances from the Xib by assigned name and assigned bundle. */
-    func register(#nibName:String, inBundle bundle:NSBundle?, forType type:NotificationType){
+    func register(nibName nibName:String, inBundle bundle:NSBundle?, forType type:NotificationType){
         
-        var nib = UINib(nibName: nibName, bundle: bundle)
+        let nib = UINib(nibName: nibName, bundle: bundle)
         self.register(nib:nib , forType: type)
         
     }
     
-    func register(#nibName:String, inBundle bundle:NSBundle?, useIndex viewIndex:Int, forType type:NotificationType){
+    func register(nibName nibName:String, inBundle bundle:NSBundle?, useIndex viewIndex:Int, forType type:NotificationType){
         
-        var nib = UINib(nibName: nibName, bundle: bundle)
+        let nib = UINib(nibName: nibName, bundle: bundle)
         self.register(nib: nib, useIndex: viewIndex, forType: type)
         
     }
     /** Default - Use First View in instants of Xib */
-    func register(#nib:UINib, forType type:NotificationType){
+    func register(nib nib:UINib, forType type:NotificationType){
         self.register(nib: nib, useIndex: 0, forType: type)
     }
     
-    func register(#nib:UINib, useIndex viewIndex:Int, forType type:NotificationType){
+    func register(nib nib:UINib, useIndex viewIndex:Int, forType type:NotificationType){
         self.templateViewsDict[type] = Template.FromNib(nib, viewIndex)
     }
     
@@ -213,28 +213,28 @@ class GZNotifier{
     
     
     
-    func show(#type:NotificationType, sampleMessage message:String, animated:Bool){
+    func show(type type:NotificationType, sampleMessage message:String, animated:Bool){
         
         self.show(inView: self.baseView, type: type, sampleMessage: message, animated: animated)
 
     }
     
-    func show(#inView:UIView, type:NotificationType, sampleMessage message:String, animated:Bool){
+    func show(inView inView:UIView, type:NotificationType, sampleMessage message:String, animated:Bool){
         
         self.show(inView: inView , type: type, sampleMessage: message, sampleTitle: "", animated: animated)
         
     }
     
-    func show(#type:NotificationType, sampleMessage message:String, sampleTitle title:String, animated:Bool){
+    func show(type type:NotificationType, sampleMessage message:String, sampleTitle title:String, animated:Bool){
         
         self.show(inView: self.baseView, type: type, sampleMessage: message, sampleTitle: title, animated: animated)
         
     }
     
     
-    func show(#inView:UIView, type:NotificationType, sampleMessage message:String, sampleTitle title:String, animated:Bool){
+    func show(inView inView:UIView, type:NotificationType, sampleMessage message:String, sampleTitle title:String, animated:Bool){
         
-        var notification = type.simpleNotification()
+        let notification = type.simpleNotification()
         
         notification.title = title
         notification.message = message
@@ -243,25 +243,25 @@ class GZNotifier{
         
     }
     
-    func show(#type:NotificationType, notification:GZNotification, animated:Bool){
+    func show(type type:NotificationType, notification:GZNotification, animated:Bool){
 
         self.show(inView: self.baseView, type: type, notification: notification, animated: animated)
         
     }
     
     
-    func show(#inView:UIView, type:NotificationType, notification:GZNotification, animated:Bool){
+    func show(inView inView:UIView, type:NotificationType, notification:GZNotification, animated:Bool){
         self.show(inView: inView, type: type, notification: notification, appearSetting: nil, animated: animated)
     }
     
     
-    func show(#inView:UIView, type:NotificationType, notification:GZNotification, appearSetting:GZNotifierContentAppearSetting?, animated:Bool){
+    func show(inView inView:UIView, type:NotificationType, notification:GZNotification, appearSetting:GZNotifierContentAppearSetting?, animated:Bool){
         
         self.animation.notifier = self
         
         if let template = self.templateViewsDict[type]{
             
-            var notificationView = template.createNotificationView()
+            let notificationView = template.createNotificationView()
             notificationView.notification = notification
             notificationView.notifier = self
             
@@ -270,7 +270,7 @@ class GZNotifier{
             
             self.delegate?.notifierPrepareNotificationView(self, type: type, notification: notification, notificationView: notificationView)
             
-            var runwayView = GZNotifier.RunWayView()
+            let runwayView = GZNotifier.RunWayView()
             
             var runwayFrame = CGRect(origin: notificationView.appearByOffset, size: notificationView.appearInSize)
             var notificationFrame = CGRect(origin: CGPoint(x: 0, y: 0), size: notificationView.appearInSize)
@@ -278,7 +278,7 @@ class GZNotifier{
             //如果y設為 0，為避開status bar 的處理
             if notificationView.appearByOffset.y == 0 {
                 
-                var statusFrame = UIApplication.sharedApplication().statusBarFrame
+                let statusFrame = UIApplication.sharedApplication().statusBarFrame
                 
                 runwayFrame.size.height += statusFrame.height
                 
@@ -297,7 +297,7 @@ class GZNotifier{
             
             runwayView.addSubview(notificationView)
             
-            var autoHiddenSetting = appearSetting?.autoHiddenSetting ?? self.contentAppearSetting.autoHiddenSetting
+            let autoHiddenSetting = appearSetting?.autoHiddenSetting ?? self.contentAppearSetting.autoHiddenSetting
             
             if let delegate = self.delegate {
                 delegate.notifierWillAppear(self, notificationView: notificationView)
@@ -306,7 +306,7 @@ class GZNotifier{
             switch autoHiddenSetting {
                 
             case .Manual:
-                println("Manual")
+                print("Manual")
                 
             case let .AutoHiddenAfter(hideByAfterTimeInterval):
                 self.animation.show(hideAfterDuration: hideByAfterTimeInterval, notificationView: notificationView, completionHandler: { (finished) -> Void in
@@ -314,7 +314,7 @@ class GZNotifier{
                 })
                 
             case let .AutoHiddenWhenCompletion(block):
-                println("block:\(block)")
+                print("block:\(block)")
             
             }
             
@@ -327,7 +327,7 @@ class GZNotifier{
     
     func show(inViewController viewController:UIViewController, type:NotificationType, sampleMessage message:String, animated:Bool){
         
-        var currentAppearSetting = self.contentAppearSetting
+        let currentAppearSetting = self.contentAppearSetting
         self.contentAppearSetting.appearByOffset.y = viewController.topLayoutGuide.length
         self.show(inView: viewController.view , type: type, sampleMessage: message, sampleTitle: "", animated: animated)
         self.contentAppearSetting = currentAppearSetting
@@ -335,7 +335,7 @@ class GZNotifier{
     
     func show(inViewController viewController:UIViewController, type:NotificationType, sampleMessage message:String, sampleTitle title:String, animated:Bool){
         
-        var currentAppearSetting = self.contentAppearSetting
+        let currentAppearSetting = self.contentAppearSetting
         self.contentAppearSetting.appearByOffset.y = viewController.topLayoutGuide.length
         self.show(inView: viewController.view , type: type, sampleMessage: message, sampleTitle: title, animated: animated)
         self.contentAppearSetting = currentAppearSetting
@@ -423,7 +423,7 @@ extension GZNotifier {
 
 // MARK: - Extensions of NotificationType
 
-extension GZNotifier.NotificationType:Printable{
+extension GZNotifier.NotificationType:CustomStringConvertible{
     
     var description:String {
         return self.rawValue
@@ -442,7 +442,7 @@ private extension GZNotifier.NotificationType{
 
 // MARK: - Extensions of Template
 
-extension GZNotifier.Template : Printable
+extension GZNotifier.Template : CustomStringConvertible
 {
     var description:String{
         switch self {
@@ -452,7 +452,7 @@ extension GZNotifier.Template : Printable
             
         case let .FromClass(TemplateClass):
             
-            var className = String(CString: class_getName(TemplateClass), encoding: NSUTF8StringEncoding)
+            let className = String(CString: class_getName(TemplateClass), encoding: NSUTF8StringEncoding)
             return "From Class :\(className)"
         }
         
@@ -463,13 +463,13 @@ extension GZNotifier.Template : Printable
         switch self {
             
         case let .FromClass(Class):
-            var notificationView = Class()
+            let notificationView = Class.init()
             return notificationView
             
         case let .FromNib(Nib, ViewIndex):
             var instantsInXib = Nib.instantiateWithOwner(nil, options: nil)
             
-            var notificationView = instantsInXib[ViewIndex] as! GZNotifier.TemplateView
+            let notificationView = instantsInXib[ViewIndex] as! GZNotifier.TemplateView
             
             return notificationView
         }
@@ -508,7 +508,7 @@ extension GZNotifier {
         }
         
         required init() {
-            super.init(frame : CGRect.zeroRect)
+            super.init(frame : CGRect.zero)
             
             self.__initialize()
         }
@@ -520,7 +520,7 @@ extension GZNotifier {
             
         }
 
-        required init(coder aDecoder: NSCoder) {
+        required init?(coder aDecoder: NSCoder) {
             super.init(coder: aDecoder)
             
             self.__initialize()
@@ -568,7 +568,7 @@ extension GZNotifier {
         
         
         deinit{
-            println("TemplateView Did Deinit")
+            print("TemplateView Did Deinit")
         }
         
     }
@@ -638,22 +638,22 @@ extension GZNotifier.TemplateView{
             }
             
             
-            var imageSize:CGFloat = vaildBounds.height * (44.0/60.0)
-            var iconImageSize = CGSize(width: imageSize, height: imageSize)
+            let imageSize:CGFloat = vaildBounds.height * (44.0/60.0)
+            let iconImageSize = CGSize(width: imageSize, height: imageSize)
             
             self.iconImageView.frame.size = iconImageSize
             self.iconImageView.contentMode = UIViewContentMode.ScaleAspectFill
             
             
             self.iconImageView.center = CGPoint(x: iconImageSize.width/2.0, y: vaildBounds.midY)
-            self.iconImageView.frame.offset(dx: 6, dy: 0)
+            self.iconImageView.frame.offsetInPlace(dx: 6, dy: 0)
             
             
             self.messageLabel.frame.size = CGSize(width: vaildBounds.width - imageSize - 10, height: vaildBounds.height)
             self.messageLabel.frame.origin = CGPoint(x: self.iconImageView.frame.maxX + 5, y: vaildBounds.minY)
             
-            self.messageLabel.autoresizingMask = UIViewAutoresizing.FlexibleTopMargin | UIViewAutoresizing.FlexibleLeftMargin
-            self.iconImageView.autoresizingMask = UIViewAutoresizing.FlexibleTopMargin | UIViewAutoresizing.FlexibleRightMargin
+            self.messageLabel.autoresizingMask = [UIViewAutoresizing.FlexibleTopMargin, UIViewAutoresizing.FlexibleLeftMargin]
+            self.iconImageView.autoresizingMask = [UIViewAutoresizing.FlexibleTopMargin, UIViewAutoresizing.FlexibleRightMargin]
             
         }
         
@@ -741,7 +741,7 @@ class GZNotificationAnimation{
 //        })
 //    }
     
-    func show(#hideAfterDuration:NSTimeInterval, notificationView:GZNotifier.TemplateView, completionHandler:(finished:Bool)->Void){
+    func show(hideAfterDuration hideAfterDuration:NSTimeInterval, notificationView:GZNotifier.TemplateView, completionHandler:(finished:Bool)->Void){
         self.show(notificationView, delay:0, completionHandler: { (finished) -> Void in
             self.hide(notificationView, delay: hideAfterDuration, completionHandler: { (finished) -> Void in
                 completionHandler(finished: finished)
@@ -751,8 +751,8 @@ class GZNotificationAnimation{
     
     func show(notificationView:GZNotifier.TemplateView, delay:NSTimeInterval, completionHandler:(finished:Bool)->Void){
 
-        var shouldTranslator = CGPoint(x: 0, y: -notificationView.frame.maxY)
-        var startTranslation = CGAffineTransformMakeTranslation(shouldTranslator.x, shouldTranslator.y)
+        let shouldTranslator = CGPoint(x: 0, y: -notificationView.frame.maxY)
+        let startTranslation = CGAffineTransformMakeTranslation(shouldTranslator.x, shouldTranslator.y)
         
         notificationView.transform = startTranslation
         
@@ -770,8 +770,8 @@ class GZNotificationAnimation{
     func hide(notificationView:GZNotifier.TemplateView, delay:NSTimeInterval,completionHandler:(finished:Bool)->Void){
         
         
-        var shouldTranslator = CGPoint(x: 0, y: -notificationView.frame.maxY)
-        var startTranslation = CGAffineTransformMakeTranslation(shouldTranslator.x, shouldTranslator.y)
+        let shouldTranslator = CGPoint(x: 0, y: -notificationView.frame.maxY)
+        let startTranslation = CGAffineTransformMakeTranslation(shouldTranslator.x, shouldTranslator.y)
         
         UIView.animateWithDuration(0.6, delay: delay, options: UIViewAnimationOptions.CurveEaseInOut, animations: { () -> Void in
             notificationView.transform = startTranslation
@@ -919,7 +919,7 @@ extension GZNotifier.TemplateView.__DefaultTemplateView {
     private class func drawNekerFailedIcon(frame: CGRect, strokeColor: UIColor) {
         
         //// Bezier 3 Drawing
-        var bezier3Path = UIBezierPath()
+        let bezier3Path = UIBezierPath()
         bezier3Path.moveToPoint(CGPointMake(frame.minX + 0.50000 * frame.width, frame.minY + 1.00000 * frame.height))
         bezier3Path.addCurveToPoint(CGPointMake(frame.minX + 0.00000 * frame.width, frame.minY + 0.50000 * frame.height), controlPoint1: CGPointMake(frame.minX + 0.22266 * frame.width, frame.minY + 1.00000 * frame.height), controlPoint2: CGPointMake(frame.minX + 0.00000 * frame.width, frame.minY + 0.77734 * frame.height))
         bezier3Path.addCurveToPoint(CGPointMake(frame.minX + 0.50000 * frame.width, frame.minY + 0.00000 * frame.height), controlPoint1: CGPointMake(frame.minX + 0.00000 * frame.width, frame.minY + 0.22266 * frame.height), controlPoint2: CGPointMake(frame.minX + 0.22266 * frame.width, frame.minY + 0.00000 * frame.height))
@@ -953,7 +953,7 @@ extension GZNotifier.TemplateView.__DefaultTemplateView {
     private class func drawNekerSuccessIconImage(frame: CGRect, strokeColor: UIColor) {
         
         //// Bezier Drawing
-        var bezierPath = UIBezierPath()
+        let bezierPath = UIBezierPath()
         bezierPath.moveToPoint(CGPointMake(frame.minX + 0.50000 * frame.width, frame.minY + 1.00000 * frame.height))
         bezierPath.addCurveToPoint(CGPointMake(frame.minX + 0.00000 * frame.width, frame.minY + 0.50000 * frame.height), controlPoint1: CGPointMake(frame.minX + 0.22266 * frame.width, frame.minY + 1.00000 * frame.height), controlPoint2: CGPointMake(frame.minX + 0.00000 * frame.width, frame.minY + 0.77734 * frame.height))
         bezierPath.addCurveToPoint(CGPointMake(frame.minX + 0.50000 * frame.width, frame.minY + 0.00000 * frame.height), controlPoint1: CGPointMake(frame.minX + 0.00000 * frame.width, frame.minY + 0.22266 * frame.height), controlPoint2: CGPointMake(frame.minX + 0.22266 * frame.width, frame.minY + 0.00000 * frame.height))
@@ -982,7 +982,7 @@ extension GZNotifier.TemplateView.__DefaultTemplateView {
     private class func drawNekerWarningIconImage(frame: CGRect, strokeColor: UIColor) {
         
         //// Bezier Drawing
-        var bezierPath = UIBezierPath()
+        let bezierPath = UIBezierPath()
         bezierPath.moveToPoint(CGPointMake(frame.minX + 0.50000 * frame.width, frame.minY + 1.00000 * frame.height))
         bezierPath.addCurveToPoint(CGPointMake(frame.minX + 0.00000 * frame.width, frame.minY + 0.50000 * frame.height), controlPoint1: CGPointMake(frame.minX + 0.22266 * frame.width, frame.minY + 1.00000 * frame.height), controlPoint2: CGPointMake(frame.minX + 0.00000 * frame.width, frame.minY + 0.77734 * frame.height))
         bezierPath.addCurveToPoint(CGPointMake(frame.minX + 0.50000 * frame.width, frame.minY + 0.00000 * frame.height), controlPoint1: CGPointMake(frame.minX + 0.00000 * frame.width, frame.minY + 0.22266 * frame.height), controlPoint2: CGPointMake(frame.minX + 0.22266 * frame.width, frame.minY + 0.00000 * frame.height))
